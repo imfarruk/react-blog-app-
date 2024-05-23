@@ -11,9 +11,15 @@ import {
 } from "firebase/auth";
 import { app } from "../../firebase/firebase";
 import { toast } from "react-toastify";
+import { doc, getDoc, getFirestore, setDoc, updateDoc } from "firebase/firestore";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+const storage = getStorage();
+const firestore = getFirestore(app);
+const blogUsers = "blog-user";
+const usersPicture = "user-picture";
 
 const initialState = {
   token: localStorage.getItem("blogToken") || null,
@@ -39,10 +45,13 @@ export const authSlice = createSlice({
         state.error = null;
       })
       .addCase(signupUser.fulfilled, (state, action) => {
+        console.log(action.payload,'payload');
         state.user = action.payload;
         state.loading = false;
-        state.isAuthenticated = true;
-        state.token = action.payload.token;
+        state.isAuthenticated =  action.payload.token ? true : false;
+        state.token =  action.payload.token;
+        // state.isAuthenticated =  action.payload !== 'auth/email-already-in-use' ? true : false;
+        // state.token = action.payload !== 'auth/email-already-in-use' && action.payload.token;
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.loading = false;
@@ -55,7 +64,8 @@ export const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.loading = false;
-        state.isAuthenticated = action.payload.token.length !==0 ? true : false;
+        state.isAuthenticated =
+          action.payload.token.length !== 0 ? true : false;
         state.token = action.payload.token;
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -75,7 +85,15 @@ export const authSlice = createSlice({
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      .addCase(userDetails.fulfilled, (state,action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(userDetails.pending, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
   },
 });
 
@@ -104,11 +122,10 @@ export const loginUser = createAsyncThunk(
         photoURL: userCredential.user.photoURL,
         uid: userCredential.user.uid,
       };
-      console.log(users,'user');
-      toast.success('Login successful');
+      toast.success("Login successful");
       return users;
     } catch (error) {
-        toast.error(error.code);
+      toast.error(error.code);
       return thunkAPI.rejectWithValue(error.code);
     }
   }
@@ -117,27 +134,33 @@ export const loginUser = createAsyncThunk(
 export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async ({ email, password }, thunkAPI) => {
+    
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
+      if(!res){
+        return false
+      }
       const user = res.user;
       const token = await user.getIdToken();
       localStorage.setItem("blogToken", JSON.stringify(token));
 
       const users = {
-        token: token,
-        displayName: user.displayName,
+        userName: user.displayName,
         email: user.email,
         phoneNumber: user.phoneNumber,
         photoURL: user.photoURL,
+        role:"user",
         uid: user.uid,
+        token:token,
       };
-      toast.success(res.user);
-      console.log(users,res,'res')
+      const docRef = doc(firestore, blogUsers, users.uid);
+      await setDoc(docRef, users, { merge: true });
+     
+      toast.success('Signup successful');
       return users;
     } catch (error) {
       toast.error(error.code);
-      console.log(error.code)
-      return error.code;
+      return thunkAPI.rejectWithValue(error.code);
     }
   }
 );
@@ -147,9 +170,51 @@ export const logoutUser = createAsyncThunk(
     try {
       await signOut(auth);
       localStorage.removeItem("blogToken");
-      toast.success('Logout successful')
+      toast.success("Logout successful");
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
   }
 );
+
+export const userDetails = createAsyncThunk('userDetails',async()=>{
+  try{
+    const docRef =  doc(firestore, blogUsers, auth.currentUser.uid);
+    const result = await getDoc(docRef);
+    const value = result.data()
+    return value;
+  }catch(error){
+console.log(error.code);
+  }
+})
+
+export const uploadProfilePhoto = async ({file, data}) => {
+  console.log(file,data,'data');
+  let downloadURLs = null
+  let dates = Date.now();
+  try {
+      if (data.photoURL.length !== 0) {
+        const storageRef = ref(
+          storage,
+          `${usersPicture}/${auth.currentUser.uid}`
+        );
+        await uploadBytes(storageRef, data.photoURL);
+        downloadURLs = await getDownloadURL(storageRef);
+      }
+      const docRef = doc(firestore, blogUsers, auth.currentUser.uid);
+    
+      const updateRes = await setDoc(docRef, {
+        userName: data.userName,
+        photoURL: downloadURLs,
+        role: data.role,
+        phoneNumber:data.phoneNumber,
+        // lastUpdate: dates,
+        email:auth.currentUser.email,
+      }, { merge: true });
+      return updateRes;
+  }catch(error){
+    console.log(error);
+  }
+}
+
+

@@ -15,9 +15,9 @@ import { Link, useNavigate } from "react-router-dom";
 // import { MaterialUISwitch } from "../css/muiStyle";
 import { IoMdMenu } from "react-icons/io";
 import { useTheme } from "@mui/material/styles";
-import { linkStyles } from "../assets/css/muiStyles";
+import { MaterialUISwitch, linkStyles } from "../assets/css/muiStyles";
 import { useDispatch, useSelector } from "react-redux";
-import { Avatar } from "@mui/material";
+import { Avatar, FormControlLabel } from "@mui/material";
 import { logoutUser } from "../store/reducer/authReducer";
 
 // importing styles
@@ -25,10 +25,10 @@ import { logoutUser } from "../store/reducer/authReducer";
 const pages1 = ["home", "login", "signup"];
 const settings = ["profile", "sign out"];
 
-const Header = () => {
+const Header = ({ check, change }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const { isAuthenticated, loading ,user} = useSelector((state) => state.auth);
 
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
@@ -67,7 +67,12 @@ const Header = () => {
             alignItems: { xs: "flex-end", sm: "center" },
           }}
         >
-          <Typography>
+           <FormControlLabel
+            control={<MaterialUISwitch sx={{ m: 1 }} onChange={change} checked={check === 'dark'} />}
+            label={theme.palette.mode === "light" ? "Light Mode" : "Dark Mode"}
+            sx={{ mr: { xs: 0, sm: 1 }, ml: '2px',color: "text.primary" }}
+          />
+          <Typography sx={{color: "text.primary",}}>
             DATE ⌚ {date}:{month}:{year}
           </Typography>
         </FormGroup>
@@ -90,13 +95,13 @@ const Header = () => {
                 display: { xs: "flex", md: "none" },
                 textDecoration: "none",
                 color: "inherit",
-                fontWeight: 600,
+                fontWeight: 700,
                 letterSpacing: ".2rem",
                 justifyContent: "center",
               }}
             >
               <Link to="/home" style={{ ...linkStyles }}>
-                Blogg App
+                We Blogg
               </Link>
             </Typography>
             {!isAuthenticated && (
@@ -186,7 +191,7 @@ const Header = () => {
               component="a"
               sx={{
                 flexGrow: 1,
-                fontWeight: 700,
+                fontWeight: 800,
                 display: { xs: "none", md: "flex" },
                 textDecoration: "none",
                 color: "white",
@@ -194,7 +199,7 @@ const Header = () => {
               }}
             >
               <Link to="/home" style={{ ...linkStyles }}>
-                Blogg App
+              We Blogg
               </Link>
             </Typography>
 
@@ -249,7 +254,7 @@ const Header = () => {
             {isAuthenticated && (
               <Box sx={{ flexGrow: 0 }}>
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                  <Avatar alt="Remy Sharp" src={user?.photoURL} />
                 </IconButton>
 
                 <Menu

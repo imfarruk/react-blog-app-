@@ -97,7 +97,10 @@ const Login = (props) => {
         setPasswordError("")
         setSaveBtnOpen(true);
         dispatch(loginUser({ email, password })).then((res) => {
+          if(!res.payload){
             toast.info(res.payload);
+          }
+           
             setSaveBtnOpen(false);
           });
     }
@@ -189,10 +192,10 @@ const Login = (props) => {
             md={8}
             sx={{
               minHeight: "450px",
-              background: "#fff",
+              // background: "#fff",
               display: "flex",
               alignSelf: "center",
-              border: "1px solid #509841",
+              border: `1px solid ${theme.palette.primary.main}`,
             }}
           >
             <Grid item xs={12} sm={7} order={{ xs: 2, sm: 1 }}>
@@ -207,9 +210,9 @@ const Login = (props) => {
                     alignItems: "center",
                   }}
                 >
-                  <Typography variant="h4">Login</Typography>
+                  <Typography variant="h4" sx={{color:'text.primary'}}>Login</Typography>
                   <TextField
-                    name="Email"
+                    name="email"
                     fullWidth
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -228,7 +231,7 @@ const Login = (props) => {
                     }}
                   />
                   <TextField
-                    name="Password"
+                    name="password"
                     fullWidth
                     value={password}
                     type={showPassword ? "text" : "password"}
@@ -237,6 +240,7 @@ const Login = (props) => {
                     label="password"
                     variant="outlined"
                     required
+                    autoComplete="off"
                     error={passwordError}
                     helperText={passwordError && passwordError}
                     
@@ -283,8 +287,8 @@ const Login = (props) => {
                 </Box>
                 <Divider />
                 <Box sx={{ textAlign: "center" }}>
-                  <Typography>------------ or ------------</Typography>
-                  <Typography>
+                  <Typography sx={{color:'text.primary'}}>------------ or ------------</Typography>
+                  <Typography sx={{color:'text.primary'}}>
                     you can also login through third party
                   </Typography>
                   <Box sx={{ p: 3, display: "flex", gap: 2 }}>

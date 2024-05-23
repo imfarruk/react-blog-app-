@@ -19,24 +19,10 @@ import {
   MdSend,
   MdVisibility,
 } from "react-icons/md";
-import { RiLockPasswordFill } from "react-icons/ri";
-import { FaUser, FaPhoneAlt, FaGoogle } from "react-icons/fa";
 import { IoPush } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import { center } from "../assets/css/muiStyles";
-import { ToastContainer, toast } from "react-toastify";
-// import { homeCenter, center,centerBox } from "../constant/style";
-// firebase
-// import {
-//   getAuth,
-//   signInWithEmailAndPassword,
-//   GoogleAuthProvider,
-//   signInWithPopup,
-// } from "firebase/auth";
-// import { app } from "../firebase/firebase";
-
-// redux
-// import { LOGIN } from "../store/actions/index";
+import {  toast } from "react-toastify";
 
 //image import
 import googleIcon from "../assets/images/google.png";
@@ -46,19 +32,13 @@ import loginImg from "../assets/images/blog-icon.png";
 import { useDispatch, useSelector } from "react-redux";
 import { BiLock } from "react-icons/bi";
 import { signupUser } from "../store/reducer/authReducer";
-// import { saveResultTodb } from "../store/actions/createQuiz";
-// import { gitHubLogin } from "../store/actions/authAction";
-
-// const auth = getAuth(app);
-// const provider = new GoogleAuthProvider();
 
 const Signup = (props) => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { user, loading, error,isAuthenticated } = useSelector((state) => state.auth);
-  console.log(user,loading,error,'error',isAuthenticated);
-  //   const alreadyAuth = useSelector((state) => state.auth);
-  //   const { isAuthenticated, loading } = alreadyAuth;
+  const stateee = useSelector((state) => state.appTheme);
+ 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -67,10 +47,6 @@ const Signup = (props) => {
   const [passwordError,setPasswordError] = useState('')
 
   const navigate = useNavigate();
-
-  useEffect(()=>{
-    isAuthenticated && navigate('/')
-  })
 
   const validateForm=()=>{
     let errors = {};
@@ -90,80 +66,34 @@ const Signup = (props) => {
 
   const signupWithEmail = async (e) => {
     e.preventDefault();
-    //  dispatch(signupUser({email,password})).then((res)=>{
-    //     console.log(res.payload,'resVal-inside');
-    //     toast.success(res);
-    //     setEmail("");
-    //     setPassword("")
-    // }).catch((error)=>{
-    //     console.log(error);
-    //     toast.error(error);
-
-    // })
+   
     if(validateForm()){
         setEmailError("")
         setPasswordError("")
         setSaveBtnOpen(true);
        dispatch(signupUser({ email, password })).then((res) => {
-        toast.info(res.payload);
+        if(res.payload !== 'auth/email-already-in-use'){
+          // toast.info(res.payload);
+          navigate('/')
+        }
+        console.log(res);
         setSaveBtnOpen(false);
       });
     }
-    //   console.log(res, "resVal-inside");
-    //   toast.success(res.payload.email);
-  
-    // console.log(resVal,'resVal-inside');
   };
 
   const signInWIthGoogle = () => {
-    // signInWithPopup(auth, provider)
-    //   .then((result) => {
-    //     GoogleAuthProvider.credentialFromResult(result);
-    //     const users = {
-    //       token: result.user.accessToken,
-    //       displayName: result.user.displayName,
-    //       email: result.user.email,
-    //       phoneNumber: result.user.phoneNumber,
-    //       photoURL: result.user.photoURL,
-    //       uid: result.user.uid,
-    //     };
-    //     dispatch({
-    //       type: LOGIN,
-    //       payload: users,
-    //     });
-    //     toast.success("login success");
-    //     navigate("/");
-    //     // ...
-    //   })
-    //   .catch((error) => {
-    //     toast.error(error.code);
-    //   });
+
   };
 
-  useEffect(() => {
-    // if (isAuthenticated && !loading) {
-    //   navigate("/");
-    // }
-  }, []);
 
-  //   useEffect(()=>{
-  // if(isAuthenticated){
-  //     saveResultTodb().then((res)=>{
-  //         toast.success(res)
-  //     })
-  // }
 
-  //   },[isAuthenticated])
 
   const handleClickShowPassword = () => {
     setShowPassword((show) => !show);
   };
 
-  const userGithubSignIn = () => {
-    // dispatch(gitHubLogin()).then((res)=>
-    // console.log(res,'resss')
-    //   )
-  };
+
   return (
     <>
       <Box sx={{ ...center, py: "30px" }}>
@@ -177,7 +107,7 @@ const Signup = (props) => {
             sm={10}
             sx={{
               minHeight: "430px",
-              background: "#fff",
+              // background: "#fff",
               display: "flex",
               alignSelf: "center",
             }}
@@ -201,7 +131,7 @@ const Signup = (props) => {
               >
                 <img src={loginImg} alt="login" width="100%" />
                 <Box>
-                  <Typography>
+                  <Typography sx={{color:'text.primary'}}>
                     if you are already a user then please login from here.
                   </Typography>
                   <Link to="/login">
@@ -231,7 +161,7 @@ const Signup = (props) => {
                     alignItems: "center",
                   }}
                 >
-                  <Typography variant="h4">Signup</Typography>
+                  <Typography variant="h4" sx={{color:'text.primary'}}>Signup</Typography>
                   <TextField
                     fullWidth
                     name="email"
@@ -307,9 +237,9 @@ const Signup = (props) => {
                 </Box>
                 <Divider />
                 <Box sx={{ textAlign: "center" }}>
-                  <Typography>------------ or ------------</Typography>
+                  <Typography sx={{color:'text.primary'}}>------------ or ------------</Typography>
 
-                  <Typography>
+                  <Typography sx={{color:'text.primary'}}>
                     you can also login through third party
                   </Typography>
                   <Box sx={{ p: 3, display: "flex", gap: 2 }}>
