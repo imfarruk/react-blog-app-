@@ -78,12 +78,11 @@ const PostDetails = () => {
   }, []);
 
   useEffect(() => {
-    console.log("call-1");
     dispatch(getAllLikeComment(id));
-  });
-  useEffect(() => {
-    navigator.clipboard.writeText(window.location.href)
   },[]);
+  // useEffect(() => {
+  //   navigator.clipboard.writeText(window.location.href)
+  // },[]);
 
   const shareBlog =async ()=>{
     if (navigator.share) {
@@ -121,7 +120,6 @@ const PostDetails = () => {
               <Stack direction="row" sx={{ p: 1, display: "flex" }}>
                 <Avatar
                   sx={{
-                    bgcolor: "red",
                     width: 50,
                     height: 50,
                     display: "flex",
@@ -133,6 +131,9 @@ const PostDetails = () => {
                     src={postDetailVal?.userDetails?.photoURL}
                     alt="profile-detail"
                     width="100%"
+                  
+                    style={{aspectRatio: '1 / 1',
+                    objectFit: 'cover'}}
                   />
                 </Avatar>
                 <Stack sx={{ alignItems: "start" }}>
@@ -140,7 +141,7 @@ const PostDetails = () => {
                     {postDetailVal?.userDetails?.userName}
                   </Typography>
                   <Typography variant="body2">
-                    {moment(postDetailVal?.timestamp).format("Do MMMM YYYY")}
+                    {moment(postDetailVal?.createdDate).format("Do MMMM YYYY")}
                   </Typography>
                 </Stack>
                 <Box style={{ marginLeft: "auto" }}>
@@ -163,7 +164,8 @@ const PostDetails = () => {
               <Divider />
               <CardMedia
                 component="img"
-                height="250"
+                height={285}
+                // sx={{aspectRation:'3/1'}}
                 image={postDetailVal?.photoURL}
                 alt="post-image"
               />

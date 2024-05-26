@@ -42,7 +42,11 @@ export const tagSlice = createSlice({
         state.tags = action.payload;
         state.totalTags = action.payload?.length;
         state.loading = false;
-      });
+      })
+      .addCase(getAllTags.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
   },
 });
 
@@ -50,9 +54,8 @@ export const {} = tagSlice.actions;
 
 export default tagSlice.reducer;
 
-export const getAllTags = createAsyncThunk("getAllTags", async (id) => {
+export const getAllTags = createAsyncThunk("tags/getAllTags", async (_,thunkAPI) => {
   try {
-    let userDetails = [];
     let resArray = [];
 
     const tagRef = collection(firestore, `${blogTags}`);
@@ -65,5 +68,6 @@ export const getAllTags = createAsyncThunk("getAllTags", async (id) => {
     return resArray;
   } catch (error) {
     console.log(error);
+    return thunkAPI.rejectWithValue(error);
   }
 });

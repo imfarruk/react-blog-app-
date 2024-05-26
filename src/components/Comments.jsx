@@ -30,11 +30,14 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { current } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
+import { app } from "../firebase/firebase";
+import { getAuth } from "firebase/auth";
+const auth = getAuth(app);
 
-const CommentLayout = ({ commentVal, postId,change }) => {
+const CommentLayout = ({ commentVal, postId, change }) => {
   const dispatch = useDispatch();
   const [openAction, setOpenAction] = useState(false);
-  const {isAuthenticated} = useSelector((state)=>state.auth)
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   const openActionButton = () => {
     setOpenAction(!openAction);
@@ -50,25 +53,25 @@ const CommentLayout = ({ commentVal, postId,change }) => {
     setAnchorElNav(null);
   };
 
-  const deleteComment = (data) => {
+  const deleteComment = (data, createrUser) => {
+    let datas;
     setAnchorElNav(null);
-    if(!isAuthenticated){
-      toast.info('You can not delete comments ! Login First')
-      
-    }else{
-      let datas = {
-        id: postId,
-        commentId: data,
-      };
-      dispatch(deleteTheComment(datas));
-      // setCall(!call)
-      change()
+    if (!isAuthenticated) {
+      toast.info("You can not delete ! Login First");
+    } else {
+      if (createrUser !== auth.currentUser.uid) {
+        toast.error("You can not delete others comment");
+      } else {
+        datas = {
+          id: postId,
+          commentId: data,
+        };
+        dispatch(deleteTheComment(datas));
+        // setCall(!call)
+        change();
+      }
     }
-
-    
   };
-
- 
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp); // Convert Firestore timestamp to JS Date
@@ -79,11 +82,17 @@ const CommentLayout = ({ commentVal, postId,change }) => {
     <>
       {/* <Grid item xs={12} > */}
       <Grid item xs={2} sm={1}>
-        <Avatar sx={{ bgcolor: "red" }} aria-label="recipe">
-          <img src={commentVal?.photoURL|| imgPost} alt="comment-view" width="100%" />
+        <Avatar sx={{ }} aria-label="recipe">
+          <img
+            src={commentVal?.photoURL || imgPost}
+            alt="comment-view"
+            width="100%"
+            style={{aspectRatio: '1 / 1',
+            objectFit: 'cover'}}
+          />
         </Avatar>
       </Grid>
-      <Grid item xs={10} sm={11} >
+      <Grid item xs={10} sm={11}>
         <Stack>
           <Box
             sx={{
@@ -98,7 +107,6 @@ const CommentLayout = ({ commentVal, postId,change }) => {
               <Typography sx={{ fontSize: "12px", opacity: 0.7, pl: 1 }}>
                 {" "}
                 {moment(commentVal?.createdDate).startOf("minutes").fromNow()}
-               
                 {/* {formatDate(commentVal?.createdDate)} */}
               </Typography>
 
@@ -136,7 +144,9 @@ const CommentLayout = ({ commentVal, postId,change }) => {
                 >
                   <Button
                     sx={{ display: "flex", alignItems: "center" }}
-                    onClick={() => deleteComment(commentVal?.id)}
+                    onClick={() =>
+                      deleteComment(commentVal?.id, commentVal?.userId)
+                    }
                   >
                     Delete <MdDelete />
                   </Button>
@@ -156,34 +166,31 @@ const CommentLayout = ({ commentVal, postId,change }) => {
 
 const Comments = ({ id, userId }) => {
   const dispatch = useDispatch();
-  const { comments,  } = useSelector((state) => state.comments);
-  const {isAuthenticated} = useSelector((state)=>state.auth)
+  const { comments } = useSelector((state) => state.comments);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const [message, setMessage] = useState("");
-  const [call,setCall] = useState(false);
-  const [loading,setLoading] = useState(true);
-
+  const [call, setCall] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     dispatch(getAllComment(id));
-    setLoading(false)
-  }, [dispatch, id,call]);
+    setLoading(false);
+  }, [dispatch, id, call]);
 
   const commentOnPost = () => {
-    if(!isAuthenticated){
-      toast.info('You can not comments on post. ! Login First')
-    }else{
-
-    dispatch(doCommentOnPost({ id, message })).then((res) => {
-      setCall(!call)
-      
-    });
-  }
-  setMessage("");
+    if (!isAuthenticated) {
+      toast.info("You can not comments on post. ! Login First");
+    } else {
+      dispatch(doCommentOnPost({ id, message })).then((res) => {
+        setCall(!call);
+      });
+    }
+    setMessage("");
   };
 
-  const changeCall = ()=>{
-    setCall(!call)
-  }
+  const changeCall = () => {
+    setCall(!call);
+  };
 
   return (
     <>
@@ -196,25 +203,30 @@ const Comments = ({ id, userId }) => {
               comments.map((msg, i) => {
                 return (
                   // <Grid key={i} item xs={12}>
-              
-                    <CommentLayout key={i} commentVal={msg} postId={id} setCall={setCall} change={(e)=>changeCall()}/>
-                    
+
+                  <CommentLayout
+                    key={i}
+                    commentVal={msg}
+                    postId={id}
+                    setCall={setCall}
+                    change={(e) => changeCall()}
+                  />
+
                   // </Grid>
                 );
               })}
-              {!loading && comments?.length === 0 && (
-            <Grid item xs={12}>
-              <Typography>Comments are empty..</Typography>
-              <Typography>Share your view..</Typography>
-            </Grid>
-          )}
-          {loading && (
-            <Grid item xs={12}>
-              <CircularProgress />
-            </Grid>
-          )}
+            {!loading && comments?.length === 0 && (
+              <Grid item xs={12}>
+                <Typography>Comments are empty..</Typography>
+                <Typography>Share your view..</Typography>
+              </Grid>
+            )}
+            {loading && (
+              <Grid item xs={12}>
+                <CircularProgress />
+              </Grid>
+            )}
           </Grid>
-          
         </Box>
         <Divider sx={{ my: 1 }} />
         <Stack spacing={2} mt={2}>

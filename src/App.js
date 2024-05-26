@@ -14,22 +14,25 @@ import Signup from "./components/Signup";
 import Profile from "./components/Profile";
 import EditProfile from "./components/EditProfile";
 
-import { useDispatch, useSelector } from "react-redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import darkTheme from "./Theme/darkTheme";
 import lightTheme from "./Theme/lightTheme";
 import { Box } from "@mui/material";
 import { themeMode } from "./store/reducer/themeReducer";
+import { loadUser, userDetails } from "./store/reducer/authReducer";
 // import { PersistGate } from 'redux-persist/integration/react'
+import { store } from "./store/store";
 
 function App() {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   // const selector = useSelector((state) => state.appTheme);
   const [darkMode, setDarkMode] = useState("light");
 
-  // useEffect(() => {
-  //   dispatch(themeMode(darkMode));
-  // }, [darkMode]);
+  useEffect(() => {
+    store.dispatch(loadUser());
+    // store.dispatch(userDetails());
+  }, []);
   const theme = darkMode === "dark" ? darkTheme : lightTheme;
 
   const themeChange = (e) => {
@@ -39,6 +42,7 @@ function App() {
   };
 
   return (
+    <Provider store={store}>
     <ThemeProvider theme={theme}>
       <Box
         className="App"
@@ -69,6 +73,7 @@ function App() {
       {/* </ThemeProvider> */}
       {/* </PersistGate> */}
     </ThemeProvider>
+     </Provider>
   );
 }
 

@@ -48,6 +48,7 @@ import { BiLock } from "react-icons/bi";
 import { loginUser } from "../store/reducer/authReducer";
 import { LoadingButton } from "@mui/lab";
 import { GrSave } from "react-icons/gr";
+import { SyncLoader } from "react-spinners";
 // import { saveResultTodb } from "../store/actions/createQuiz";
 // import { gitHubLogin } from "../store/actions/authAction";
 
@@ -220,7 +221,7 @@ const Login = (props) => {
                     label="email"
                     variant="outlined"
                     required
-                    error={emailError}
+                    error={Boolean(emailError)}
                     helperText={emailError && emailError}
                     InputProps={{
                       startAdornment: (
@@ -241,7 +242,7 @@ const Login = (props) => {
                     variant="outlined"
                     required
                     autoComplete="off"
-                    error={passwordError}
+                    error={Boolean(passwordError)}
                     helperText={passwordError && passwordError}
                     
                     InputProps={{
@@ -282,7 +283,7 @@ const Login = (props) => {
                     }}
                     open={saveBtnOpen}
                   >
-                    <CircularProgress color="inherit" />
+                   <SyncLoader color={theme.palette.primary.main} />
                   </Backdrop>
                 </Box>
                 <Divider />

@@ -1,6 +1,8 @@
 import {
+  Backdrop,
     Box,
     Button,
+    CircularProgress,
     Container,
     Divider,
     Grid,
@@ -12,12 +14,13 @@ import {
   import React, { useEffect, useState } from "react";
   import { useDispatch, useSelector } from "react-redux";
   import { useNavigate } from "react-router-dom";
-  import { styled } from "@mui/material/styles";
+  import { styled ,useTheme} from "@mui/material/styles";
   import { MdCloudUpload } from "react-icons/md";
   import { uploadProfilePhoto, userDetails } from "../store/reducer/authReducer";
   import { toast } from "react-toastify";
   import noUserPhoto from "../assets/images/No_image_available.svg.webp";
-  
+  import { SyncLoader } from "react-spinners";
+
   const VisuallyHiddenInput = styled("input")({
     clip: "rect(0 0 0 0)",
     clipPath: "inset(50%)",
@@ -33,15 +36,17 @@ import {
   const EditProfile = () => {
     const { isAuthenticated, loading, user } = useSelector((state) => state.auth);
     const navigate = useNavigate();
+    const theme = useTheme();
     const dispatch = useDispatch()
     const [userInfo, setUserInfo] = useState({});
     const [userName, setUserName] = useState(user?.userName || "");
     const [phoneNo, setPhoneNo] = useState(user?.phoneNumber);
     const [userId, setUserId] = useState(user?.uid);
-    const [imageFile, setImageFile] = useState("");
+    const [imageFile, setImageFile] = useState(null);
     const [profilePreview, setProfilePreview] = useState("");
     const [fileChange, setFileChange] = useState(false);
-  
+    const [saveBtnOpen, setSaveBtnOpen] = useState(false);
+
     useEffect(() => {
       if (!isAuthenticated && !loading) {
         navigate("/");
@@ -53,15 +58,17 @@ import {
       const data = {
         userName: userName,
         phoneNumber: phoneNo,
-        photoURL: imageFile,
+        photoURL: imageFile === null ? user?.photoURL : imageFile,
         userId: userId,
         role:user?.role
       };
-  
+      setSaveBtnOpen(true);
+      // setOpenLoading(true);
       uploadProfilePhoto({imageFile, data})
         .then((datas) => {
           toast.success("user details updated successfully");
           navigate("/profile");
+          setSaveBtnOpen(false);
         })
         .catch((error) => {
           toast.error(error.message);
@@ -105,7 +112,7 @@ import {
                     />
                   ) : (
                     <img
-                      src={user.photoURL !== null ? user?.photoURL : noUserPhoto}
+                      src={user?.photoURL !== null ? user?.photoURL : noUserPhoto}
                       style={{
                         borderRadius: "50%",
                         objectFit: "cover",
@@ -160,9 +167,18 @@ import {
                     />
                     <Box sx={{ textAlign: "end" }}>
                       <Button variant="contained" onClick={updateProfile}>
-                        Update Profile
+                        Update Profile 
                       </Button>
                     </Box>
+                    <Backdrop
+                    sx={{
+                      color: "#fff",
+                      zIndex: (theme) => theme.zIndex.drawer + 11,
+                    }}
+                    open={saveBtnOpen}
+                  >
+                    <SyncLoader color={theme.palette.primary.main} />
+                  </Backdrop>
                   </Stack>
                 </Paper>
               </Grid>

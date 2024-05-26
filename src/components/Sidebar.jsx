@@ -16,7 +16,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { styled,useTheme } from "@mui/material/styles";
 import React, { useEffect, useState } from "react";
 import { linkStyles } from "../assets/css/muiStyles";
 import lightTheme from "../Theme/lightTheme";
@@ -33,7 +33,7 @@ import {
 } from "../store/reducer/themeReducer";
 import { getAllTags } from "../store/reducer/tagsReducer";
 import {HashLoader} from "react-spinners"
-import { getAllPost, postViewByTags } from "../store/reducer/postReducer";
+import { getAllPost, getMyBlogs, postViewByTags } from "../store/reducer/postReducer";
 
 const InputStyle = styled("input")({
   width: "100%",
@@ -44,6 +44,7 @@ const InputStyle = styled("input")({
 
 const Sidebar = () => {
   const dispatch = useDispatch();
+  const theme = useTheme();
   // const { theme } = useSelector((state) => state.appTheme);
   const { tags,loading } = useSelector((state) => state.tag);
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -97,9 +98,13 @@ const Sidebar = () => {
           <Typography sx={{  mb: 1,color:'text.primary' }} >
             Customize this website.
           </Typography>
-          <Button variant="contained" onClick={() => setThemeOpen(true)}>
+          <Tooltip title="Soon it will be reflect">
+         <span>
+          <Button variant="contained" onClick={() => setThemeOpen(true)} disabled>
             Click
           </Button>
+          </span>
+          </Tooltip>
           <Dialog
             open={themeOpen}
             onClose={() => setThemeOpen(false)}
@@ -212,6 +217,25 @@ const Sidebar = () => {
           </Dialog>
         </Box>
         <Box sx={{ mt: 2 }}>
+        { isAuthenticated &&
+            !loading && tags.length !== 0 && (
+              <>
+          <Typography sx={{color:'text.primary'}}>
+            {" "}
+            Your all active blog
+          </Typography>
+          
+              <Chip
+            icon={<GrTechnology />}
+            label='My blogs'
+            onClick={()=> dispatch(getMyBlogs())}
+            sx={{ m: 1,}}
+          />
+          </>
+            )
+          }
+          </Box>
+        <Box sx={{ mt: 2 }}>
           <Typography sx={{color:'text.primary'}}>
             {" "}
             Search blog by tags
@@ -220,7 +244,7 @@ const Sidebar = () => {
             !loading && tags.length !== 0 && (
               <Chip
             icon={<GrTechnology />}
-            label='view all post'
+            label='view all blog'
             onClick={()=> dispatch(getAllPost())}
             sx={{ m: 1,}}
           />
@@ -231,6 +255,7 @@ const Sidebar = () => {
             !loading && tags.length !== 0 && tags.map((tag,i)=>{
               return (
                 <Chip
+                key={i}
             icon={<GrTechnology />}
             label={tag?.tagName}
             onClick={()=>handleTags(`${tag?.tagName}`)}
@@ -250,7 +275,7 @@ const Sidebar = () => {
             loading &&  (
               <Box sx={{display: 'flex',
                 justifyContent: 'center',my:4}}>
-              <HashLoader color="#36d7b7" />
+              <HashLoader color={theme.palette.primary.main} />
               </Box>
             )
           }

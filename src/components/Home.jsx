@@ -17,9 +17,12 @@ import { fetchMoreData, getAllPost, resetPosts } from "../store/reducer/postRedu
 import { MdExpandMore } from "react-icons/md";
 import { getAllComment } from "../store/reducer/allCommentReducer";
 import { getAllLikeComment } from "../store/reducer/commentReducer";
+import { SyncLoader } from "react-spinners";
+import { useTheme } from "@mui/material/styles";
 
 const Home = () => {
   const dispatch = useDispatch();
+  const theme = useTheme();
   const { loading, posts } = useSelector((state) => state.post);
   const {  totalComments } = useSelector((state) => state.comments);
   const {  totalLiked } = useSelector((state) => state.likes);
@@ -40,7 +43,6 @@ const Home = () => {
     
   // },[posts])
 
-  // console.log(totalComments,totalLiked,'total');
 
   const loadMorePost = () => {
     dispatch(fetchMoreData());
@@ -81,6 +83,7 @@ const Home = () => {
                     </Grid>
                   );
                 })}
+                
               {loading && (
                 <Stack
                   item
@@ -93,7 +96,7 @@ const Home = () => {
                     mt:10,
                   }}
                 >
-                  <CircularProgress />
+                  <SyncLoader color={theme.palette.primary.main} />
                 </Stack>
               )}
               {!loading && posts?.length === 0 && (
@@ -109,7 +112,7 @@ const Home = () => {
                     justifyContent: "center",
                   }}
                 >
-                  <Typography>No data found</Typography>
+                  <Typography sx={{colo:'text.primary'}}>No blogs found</Typography>
                 </Grid>
               )}
               

@@ -136,7 +136,6 @@ export const dislikePost = createAsyncThunk(
         docId = doc.id;
       });
       await deleteDoc(doc(firestore, `${blogPostDB}/${id}/likedUser`, docId));
-      toast.success("dislike post");
     } catch (error) {
       console.log(error.code);
     }

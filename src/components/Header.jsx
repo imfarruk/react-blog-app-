@@ -48,6 +48,7 @@ const Header = ({ check, change }) => {
   };
   const signOutUser = () =>{
     dispatch(logoutUser())
+    navigate('/')
   }
   const theme = useTheme();
   let newDate = new Date();

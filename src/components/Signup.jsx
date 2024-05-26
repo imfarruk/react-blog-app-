@@ -32,6 +32,7 @@ import loginImg from "../assets/images/blog-icon.png";
 import { useDispatch, useSelector } from "react-redux";
 import { BiLock } from "react-icons/bi";
 import { signupUser } from "../store/reducer/authReducer";
+import { SyncLoader } from "react-spinners";
 
 const Signup = (props) => {
   const theme = useTheme();
@@ -171,7 +172,7 @@ const Signup = (props) => {
                     label="email"
                     variant="outlined"
                     required
-                    error={emailError}
+                    error={Boolean(emailError)}
                     helperText={emailError && emailError}
                     InputProps={{
                       startAdornment: (
@@ -192,7 +193,7 @@ const Signup = (props) => {
                     label="password"
                     variant="outlined"
                     required
-                    error={passwordError}
+                    error={Boolean(passwordError)}
                     helperText={passwordError && passwordError}
                     InputProps={{
                       startAdornment: (
@@ -232,7 +233,7 @@ const Signup = (props) => {
                     }}
                     open={saveBtnOpen}
                   >
-                    <CircularProgress color="inherit" />
+                    <SyncLoader color={theme.palette.primary.main} />
                   </Backdrop>
                 </Box>
                 <Divider />

@@ -17,7 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { styled } from "@mui/material/styles";
+import { styled ,useTheme} from "@mui/material/styles";
 import { FaEdit } from "react-icons/fa";
 import imgPost from "../logo.svg";
 import { MdCloudUpload } from "react-icons/md";
@@ -28,6 +28,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { getAllTags } from "../store/reducer/tagsReducer";
+import ImageCroper from "./imageCroper";
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
+import { SyncLoader } from "react-spinners";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -43,6 +47,7 @@ const VisuallyHiddenInput = styled("input")({
 
 const CreatePost = () => {
   const dispatch = useDispatch()
+  const theme = useTheme();
   const navigate = useNavigate()
   const { tags,loading } = useSelector((state) => state.tag);
   const [imagePreview, setImagePreview] = useState("");
@@ -51,6 +56,14 @@ const CreatePost = () => {
   const [blogTitle,setBlogTitle] = useState("")
   const [blogType,setBlogType] = useState("")
   const [saveBtnOpen, setSaveBtnOpen] = useState(false);
+  const [src, setSrc] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState('');
+ const [modelOpen,setModelOpen] = useState(false)
+
+  const handleUpload = (url) => {
+    setUploadedImageUrl(url);
+    setModelOpen(false)
+  };
 
   useEffect(()=>{
     dispatch(getAllTags())
@@ -60,13 +73,23 @@ const CreatePost = () => {
     let files = e.target.files[0];
     setImage(files);
     setImagePreview(URL.createObjectURL(files));
+    setModelOpen(true)
+  };
+
+  const onSelectFile = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const reader = new FileReader();
+      reader.addEventListener('load', () => setImagePreview(reader.result));
+      reader.readAsDataURL(e.target.files[0]);
+      setModelOpen(true)
+    }
   };
 
   const postBlog = async(e) =>{
     e.preventDefault();
-   
+    const file = await fetch(uploadedImageUrl).then((res) => res.blob());
     const value={
-      image,
+      image:file,
       blogContent,
       blogTitle,
       blogType
@@ -87,6 +110,9 @@ const CreatePost = () => {
   
 
   }
+  const closeDialog =()=>{
+    setModelOpen(!modelOpen)
+  }
   return (
     <>
       <Box my={5}>
@@ -97,12 +123,13 @@ const CreatePost = () => {
           <Card>
             <CardHeader title="Welcome to Create blog" />
             <Divider />
-            {imagePreview?.length !==0 && (
+            {uploadedImageUrl?.length !==0 && (
               <CardMedia
                 component="img"
-                height="250"
-                image={imagePreview}
-                alt="Paella dish"
+                // height="260"
+                image={uploadedImageUrl}
+                alt="create-post"
+                sx={{aspectRatio:'3/1'}}
               />
             )}
 
@@ -115,8 +142,22 @@ const CreatePost = () => {
               sx={{ m: 2, float: "right" }}
             >
               Upload file
-              <VisuallyHiddenInput onChange={changeImage} type="file" />
+              <VisuallyHiddenInput accept="image/*" onChange={onSelectFile}  type="file"/>
             </Button>
+             {
+              modelOpen && (
+                <ImageCroper closeDialogBtn={closeDialog} ImageToCrop = {imagePreview} onUpload={handleUpload}/>
+                // <ReactCrop
+                // src={image}
+                // crop={crop}
+                // ruleOfThirds
+                // onImageLoaded={onImageLoaded}
+                // onComplete={onCropComplete}
+                // onChange={(newCrop) => setCrop(newCrop)}
+                // style={{zIndex:32343}}
+              // />
+              )
+             }
             <CardContent>
                 <form>
               <Stack spacing={2} sx={{ width: "100%" }}>
@@ -169,7 +210,7 @@ const CreatePost = () => {
                     }}
                     open={saveBtnOpen}
                   >
-                    <CircularProgress color="inherit" />
+                   <SyncLoader color={theme.palette.primary.main} />
                   </Backdrop>
             </CardActions>
           </Card>

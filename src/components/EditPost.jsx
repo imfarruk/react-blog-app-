@@ -22,13 +22,15 @@ import { BiSolidLike } from "react-icons/bi";
 import { FaCommentDots, FaEdit, FaShareSquare } from "react-icons/fa";
 import imgPost from "../logo.svg";
 import { MdCloudUpload, MdCreate } from "react-icons/md";
-import { styled } from "@mui/material/styles";
+import { styled,useTheme } from "@mui/material/styles";
 import { useDispatch, useSelector } from "react-redux";
 import { editPostById, getPostById } from "../store/reducer/postReducer";
 import { useNavigate, useParams } from "react-router-dom";
 import moment from "moment";
 import { toast } from "react-toastify";
 import { getAllTags } from "../store/reducer/tagsReducer";
+import ImageCroper from "./imageCroper";
+import { SyncLoader } from "react-spinners";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -46,6 +48,7 @@ const EditPost = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const theme = useTheme();
   const { tags } = useSelector((state) => state.tag);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [imagePreview, setImagePreview] = useState("");
@@ -56,13 +59,15 @@ const EditPost = () => {
   const [blogTitle, setBlogTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [openLoading, setOpenLoading] = useState(false);
+  const [modelOpen,setModelOpen] = useState(false)
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+
   useEffect(() => {
     dispatch(getPostById(id)).then((res) => {
       setPostDetailVal(res.payload);
       setBlogContent(res.payload?.content);
       setBlogType(res.payload?.type);
       setBlogTitle(res.payload?.title);
-      console.log(res, "selc-res", user);
       setImage(res.payload?.photoURL);
       setLoading(false);
     });
@@ -71,6 +76,7 @@ const EditPost = () => {
   useEffect(()=>{
     dispatch(getAllTags())
   },[])
+
   useEffect(() => {
     if (!isAuthenticated) {
       toast.info("You are not authenticated");
@@ -78,26 +84,45 @@ const EditPost = () => {
     }
   }, [isAuthenticated]);
 
+  const onSelectFile = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const reader = new FileReader();
+      reader.addEventListener('load', () => setImagePreview(reader.result));
+      reader.readAsDataURL(e.target.files[0]);
+      setModelOpen(true)
+    }
+  };
+
   const changeImage = (e) => {
     let files = e.target.files[0];
     setImage(files);
     setImagePreview(URL.createObjectURL(files));
-    console.log(imagePreview, "image", e.target);
   };
 
-  const postBlog = () => {
+  const postBlog = async() => {
+    let file = await fetch(uploadedImageUrl).then((res) => res.blob());
+
     const data = {
-      photoURL: image,
+      photoURL: file,
       type: blogType,
       title: blogTitle,
       content: blogContent,
       id: id,
     };
     setOpenLoading(true);
-    dispatch(editPostById({ id, data })).then((res) => {
+    dispatch(editPostById({uploadedImageUrl, id, data ,image})).then((res) => {
       setOpenLoading(false);
       navigate(`/post-details/${id}`);
     });
+  };
+
+  const closeDialog =()=>{
+    setModelOpen(!modelOpen)
+  }
+
+  const handleUpload = (url) => {
+    setUploadedImageUrl(url);
+    setModelOpen(false)
   };
 
   return (
@@ -109,7 +134,6 @@ const EditPost = () => {
             <Stack direction="row" sx={{ p: 1, display: "flex" }}>
               <Avatar
                 sx={{
-                  bgcolor: "red",
                   width: 50,
                   height: 50,
                   display: "flex",
@@ -117,12 +141,17 @@ const EditPost = () => {
                 }}
                 aria-label="recipe"
               >
-                <img src={user?.photoURL} alt="creater-view" width="100%" />
+                <img src={user?.photoURL} alt="creater-view" 
+                width="100%"
+                
+                style={{aspectRatio: '1 / 1',
+                objectFit: 'cover'}}
+                 />
               </Avatar>
               <Stack sx={{ alignItems: "start" }}>
-                <Typography>{user?.userName}</Typography>
+                <Typography>{postDetailVal?.userDetails?.userName}</Typography>
                 <Typography variant="body2">
-                  {moment(postDetailVal?.timestamp).format("Do MMMM YYYY")}
+                {moment(postDetailVal?.createdDate).format("Do MMMM YYYY")}
                 </Typography>
               </Stack>
             </Stack>
@@ -130,14 +159,17 @@ const EditPost = () => {
             {imagePreview?.length !== 0 ? (
               <CardMedia
                 component="img"
-                height="250"
-                image={imagePreview}
+                width="100%"
+                height={285}
+                // sx={{aspectRation:'3/1'}}
+                image={uploadedImageUrl}
                 alt="blog-views"
               />
             ) : (
               <CardMedia
                 component="img"
-                height="250"
+                height={285}
+                // sx={{aspectRation:'3/1'}}
                 image={image}
                 alt="blog-views"
               />
@@ -151,8 +183,14 @@ const EditPost = () => {
               sx={{ m: 2, float: "right" }}
             >
               Upload file
-              <VisuallyHiddenInput onChange={changeImage} type="file" />
+              <VisuallyHiddenInput onChange={onSelectFile} type="file" />
             </Button>
+
+            {
+              modelOpen && (
+                <ImageCroper closeDialogBtn={closeDialog} ImageToCrop = {imagePreview} onUpload={handleUpload}/>
+              )}
+
             <CardContent>
               <Stack spacing={2} sx={{ width: "100%" }}>
                 <TextField
@@ -207,7 +245,7 @@ const EditPost = () => {
                 open={openLoading}
                 onClick={setOpenLoading}
               >
-                <CircularProgress color="inherit" />
+                <SyncLoader color={theme.palette.primary.main} />
               </Backdrop>
             </CardActions>
           </Card>
